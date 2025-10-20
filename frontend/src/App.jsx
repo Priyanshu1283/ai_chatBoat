@@ -1,105 +1,93 @@
-import { useState,useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react';
 import { io } from "socket.io-client";
-import './App.css'
+import './App.css';
 
 function App() {
-  const [socket, setSocket] = useState(null)
-  const [messages, setMessages] = useState([
+  const [socket, setSocket] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const messagesEndRef = useRef(null);
 
-  ])
-  const [inputText, setInputText] = useState('')
+  useEffect(() => {
+    const socketInstance = io("http://localhost:3000");
+    setSocket(socketInstance);
+
+    socketInstance.on('ai-message-response', (response) => {
+      const botMessage = {
+        id: Date.now() + 1,
+        text: response,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        sender: 'bot'
+      };
+      setMessages(prev => [...prev, botMessage]);
+    });
+
+    return () => {
+      socketInstance.disconnect();
+      console.log("Socket disconnected");
+    };
+  }, []);
+
+  useEffect(() => {
+    // Scroll to bottom on every new message
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSendMessage = () => {
-    if (inputText.trim() === '') return
+    if (!inputText.trim()) return;
 
     const userMessage = {
       id: Date.now(),
       text: inputText,
-      timestamp: new Date().toLocaleTimeString(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       sender: 'user'
-    }
+    };
 
-    setMessages(prevMessages => [...prevMessages, userMessage])
-    
-    socket.emit('ai-message', inputText)
+    setMessages(prev => [...prev, userMessage]);
+    socket.emit('ai-message', inputText);
+    setInputText('');
+  };
 
-    
-    setInputText('')
-    
-  }
-
-
-
-  const handleInputChange = (e) => {
-    setInputText(e.target.value)
-  }
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSendMessage()
-    }
-  }
-
-  useEffect(() => {
-    let socketInstance = io("http://localhost:3000/"); 
-    setSocket(socketInstance)
-
-    socketInstance.on('ai-message-response', (response) => {
-
-      const botMessage = {
-        id: Date.now() + 1,
-        text: response,
-        timestamp: new Date().toLocaleTimeString(),
-        sender: 'bot'
-      }
-
-      setMessages(prevMessages => [...prevMessages, botMessage])
-      console.log(messages);
-    })
-  }, []);
+  const handleInputChange = (e) => setInputText(e.target.value);
+  const handleKeyPress = (e) => e.key === 'Enter' && handleSendMessage();
 
   return (
     <div className="chat-container">
-      <div className="chat-header">
-        <h1>Ai ChatBoat</h1>
-      </div>
-      
-      <div className="chat-messages">
+      <header className="chat-header">
+        <h1>💬 AI Chat</h1>
+      </header>
+
+      <main className="chat-messages">
         {messages.length === 0 ? (
-          <div className="no-messages">
-            <p>Start a conversation...</p>
-          </div>
+          <div className="no-messages"><p>Start a conversation...</p></div>
         ) : (
-          messages.map((message) => (
-            <div key={message.id} className={`message ${message.sender === 'user' ? 'user-message' : 'bot-message'}`}>
-              <div className="message-content">
-                <span className="message-text">{message.text}</span>
-                <span className="message-timestamp">{message.timestamp}</span>
+          messages.map((msg) => (
+            <div key={msg.id} className={`message ${msg.sender}-message`}>
+              <div className="message-bubble">
+                <p className="message-text">{msg.text}</p>
+                <span className="timestamp">{msg.timestamp}</span>
               </div>
             </div>
           ))
         )}
-      </div>
+        <div ref={messagesEndRef}></div>
+      </main>
 
-      <div className="chat-input">
+      <footer className="chat-input">
         <input
           type="text"
           value={inputText}
           onChange={handleInputChange}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           placeholder="Type your message..."
           className="input-field"
         />
-        <button 
-          onClick={handleSendMessage}
-          className="send-button"
-          disabled={inputText.trim() === ''}
-        >
+        <button onClick={handleSendMessage} disabled={!inputText.trim()} className="send-button">
           Send
         </button>
-      </div>
+      </footer>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
