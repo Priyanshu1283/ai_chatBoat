@@ -9,7 +9,8 @@ function App() {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    const socketInstance = io("http://localhost:3000");
+    //running on render.com
+    const socketInstance = io("https://ai-chatboat-b9wp.onrender.com");
     setSocket(socketInstance);
 
     socketInstance.on('ai-message-response', (response) => {
