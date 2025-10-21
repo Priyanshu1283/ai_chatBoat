@@ -4,9 +4,25 @@ const { Server } = require('socket.io');
 const app = require('./src/app');
 const generateResponse = require('./src/service/ai.service');
 
+
+app.use(
+  cors({
+    origin: [
+      "https://ai-chat-boat-green.vercel.app", // your Vercel frontend
+      "http://localhost:5173" // for local dev testing
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
+
+
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: "http://localhost:5173" },
+  cors: { origin: [ "https://ai-chat-boat-green.vercel.app","http://localhost:5173"],
+  methods: ["GET", "POST"],
+  credentials: true, },
 });
 
 const chatHistory = [];
