@@ -11,7 +11,7 @@ function App() {
   useEffect(() => {
     //running on render.com
     const socketInstance = io("https://ai-chatboat-b9wp.onrender.com" ,{
-       withCredentials: true,
+      //  withCredentials: true,
     });
     setSocket(socketInstance);
 
