@@ -10,9 +10,7 @@ function App() {
 
   useEffect(() => {
     //running on render.com
-    const socketInstance = io("https://ai-chatboat-b9wp.onrender.com" ,{
-      //  withCredentials: true,
-    });
+    const socketInstance = io("https://ai-chatboat-b9wp.onrender.com" );
     setSocket(socketInstance);
 
     socketInstance.on('ai-message-response', (response) => {

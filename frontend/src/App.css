@@ -45,6 +45,7 @@ body, html, #root {
   flex-direction: column;
   gap: 0.8rem;
   scroll-behavior: smooth;
+  margin-bottom: 70px; /* add bottom padding so last message is visible above input */
 }
 
 .no-messages {
@@ -97,11 +98,18 @@ body, html, #root {
 
 /* Input Section */
 .chat-input {
+  position: fixed; /* make it stick at the bottom */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-width: 900px; /* same as container */
   display: flex;
   padding: 0.8rem;
   background: #0f172a;
   border-top: 1px solid #1e293b;
   gap: 0.5rem;
+  z-index: 100; /* keep above messages */
+  box-sizing: border-box;
 }
 
 .input-field {
@@ -142,18 +150,24 @@ body, html, #root {
 }
 
 /* Responsive */
-@media (max-width: 600px) {
+  @media (max-width: 600px) {
   .chat-container {
-    border-radius: 0;
+    width: 100%;
+    padding-bottom: 70px;
+  }
+
+  .chat-input {
+    max-width: 100%;
+    padding: 0.6rem;
   }
 
   .message-bubble {
-    max-width: 90%;
+    max-width: 85%;
     font-size: 0.9rem;
   }
 
   .send-button {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.8rem;
     font-size: 0.9rem;
   }
 }
