@@ -7,8 +7,10 @@ const generateResponse = require('./src/service/ai.service');
 const httpServer = createServer(app);
 
 const allowedOrigins = [
-  "https://ai-chat-boat-green.vercel.app", // ✅ your deployed frontend
-  "http://localhost:5173" // ✅ local dev
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
 ];
 
 const io = new Server(httpServer, {
@@ -18,17 +20,25 @@ const io = new Server(httpServer, {
   },
 });
 
-const chatHistory = [];
+const chatHistoryBySocket = new Map();
 
 io.on("connection", (socket) => {
-  console.log("A user connected");
+  console.log("A user connected:", socket.id);
+  chatHistoryBySocket.set(socket.id, []);
 
   socket.on("disconnect", () => {
-    console.log("A user disconnected");
+    chatHistoryBySocket.delete(socket.id);
+    console.log("A user disconnected:", socket.id);
+  });
+
+  socket.on("clear-chat", () => {
+    chatHistoryBySocket.set(socket.id, []);
+    console.log("Chat cleared for:", socket.id);
   });
 
   socket.on("ai-message", async (data) => {
-    console.log("Ai message received:", data);
+    console.log("AI message received:", data);
+    const chatHistory = chatHistoryBySocket.get(socket.id) || [];
 
     chatHistory.push({
       role: "user",
@@ -44,14 +54,15 @@ io.on("connection", (socket) => {
       });
 
       socket.emit("ai-message-response", aiResponse);
-      console.log("AI Response sent:", aiResponse);
+      console.log("AI Response sent");
     } catch (error) {
       console.error("Error generating AI response:", error);
-      socket.emit("ai-message-response", "Sorry, something went wrong.");
+      socket.emit("ai-message-response", "Sorry, something went wrong. Please try again.");
     }
   });
 });
 
-httpServer.listen(3000, () => {
-  console.log("✅ Server is running on port 3000");
+const PORT = process.env.PORT || 3001;
+httpServer.listen(PORT, () => {
+  console.log(`✅ Server is running on port ${PORT}`);
 });
